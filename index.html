@@ -1,20 +1,1347 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MetaToRI 로그인</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MetaToRI World — Dream Never Fades</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #f5f7ff;
+      background: #000010;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      overflow-x: hidden;
+    }
+
+    /* ===== 배경(Three.js) 프레임 ===== */
+    .bg-frame {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none; /* 배경 클릭 안되게 */
+    }
+
+    .bg-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* ===== 오버레이 전체 컨테이너 ===== */
+    .overlay {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      padding: 0 16px 60px;
+    }
+
+    .inner {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    /* ===== 네비게이션 ===== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(18px);
+      background: linear-gradient(
+        to bottom,
+        rgba(5, 5, 30, 0.9),
+        rgba(5, 5, 30, 0.3),
+        transparent
+      );
+    }
+
+    .nav-bar {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 10px 4px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.35);
+      box-shadow: 0 0 12px rgba(0, 255, 255, 0.5);
+      background: radial-gradient(circle at 30% 20%, #ffffff, #555);
+    }
+
+    .nav-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .nav-title {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-title-main {
+      font-size: 1.05rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #e9f3ff;
+      text-shadow: 0 0 10px rgba(0, 248, 255, 0.8);
+    }
+
+    .nav-title-sub {
+      font-size: 0.75rem;
+      color: #b6c4ff;
+      opacity: 0.9;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .nav-links a {
+      font-size: 0.78rem;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      text-decoration: none;
+      color: #dbe6ff;
+      background: radial-gradient(circle at top left,
+        rgba(0, 248, 255, 0.16),
+        rgba(40, 20, 80, 0.4)
+      );
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 14px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s ease-out;
+    }
+
+    .nav-links a:hover {
+      border-color: rgba(0,248,255,0.8);
+      box-shadow:
+        0 0 14px rgba(0, 248, 255, 0.7),
+        0 0 40px rgba(120, 70, 255, 0.6);
+      transform: translateY(-1px);
+    }
+
+    /* ===== 공통 섹션 스타일 ===== */
+    section {
+      padding: 56px 0;
+    }
+
+    section:first-of-type {
+      padding-top: 32px;
+    }
+
+    .section-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #93cfff;
+      margin-bottom: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-label::before {
+      content: "";
+      width: 16px;
+      height: 1px;
+      background: linear-gradient(90deg,#00f8ff,#ff80e3);
+      border-radius: 999px;
+    }
+
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-shadow: 0 0 18px rgba(0, 0, 0, 0.9);
+    }
+
+    .section-sub {
+      font-size: 0.95rem;
+      color: #c0c9ff;
+      max-width: 620px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    /* ===== Glass 카드 ===== */
+    .glass {
+      background: radial-gradient(circle at top left,
+        rgba(255,255,255,0.14),
+        rgba(12,12,40,0.85)
+      );
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.16);
+      backdrop-filter: blur(18px);
+      box-shadow:
+        0 0 26px rgba(0,0,0,0.7),
+        0 0 46px rgba(0, 248, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 0% 0%,rgba(0,248,255,0.12),transparent 55%),
+        radial-gradient(circle at 100% 10%,rgba(255,128,227,0.16),transparent 55%);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .glass-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      min-height: calc(100vh - 70px);
+      display: flex;
+      align-items: center;
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2.2fr);
+      gap: 20px;
+      align-items: center;
+    }
+
+    .hero-main {
+      padding: 24px 22px 26px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,248,255,0.6);
+      background: radial-gradient(circle at left,
+        rgba(0,248,255,0.3),
+        rgba(0,0,0,0.6)
+      );
+      font-size: 0.72rem;
+      margin-bottom: 12px;
+      color: #eaffff;
+    }
+
+    .hero-badge span.dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: radial-gradient(circle,#00f8ff,#0077ff);
+      box-shadow: 0 0 12px rgba(0,248,255,0.9);
+    }
+
+    .hero-title {
+      font-size: 2.1rem;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      text-shadow:
+        0 0 20px rgba(0,0,0,0.9),
+        0 0 26px rgba(0, 248, 255, 0.4);
+    }
+
+    .hero-title span.highlight {
+      background: linear-gradient(90deg,#00f8ff,#ff80e3,#b28bff);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero-slogan {
+      font-size: 0.95rem;
+      color: #a9c3ff;
+      margin-bottom: 14px;
+    }
+
+    .hero-desc {
+      font-size: 0.9rem;
+      color: #ccd4ff;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      border-radius: 999px;
+      border: 0;
+      cursor: pointer;
+      background: linear-gradient(90deg,#00f8ff,#ff80e3);
+      color: #050515;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-decoration: none;
+      box-shadow:
+        0 0 18px rgba(0,248,255,0.7),
+        0 0 30px rgba(255,128,227,0.6);
+      transition: all 0.18s ease-out;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px) scale(1.02);
+      box-shadow:
+        0 0 22px rgba(0,248,255,0.9),
+        0 0 40px rgba(255,128,227,0.8);
+    }
+
+    .btn-ghost {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.3);
+      font-size: 0.82rem;
+      color: #d8e2ff;
+      background: rgba(7,7,32,0.8);
+      text-decoration: none;
+      transition: all 0.18s ease-out;
+      white-space: nowrap;
+    }
+
+    .btn-ghost:hover {
+      border-color: rgba(0,248,255,0.7);
+      background: rgba(12,16,50,0.9);
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: #aab5ff;
+      flex-wrap: wrap;
+    }
+
+    .hero-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .hero-meta-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #00f8ff;
+      box-shadow: 0 0 10px rgba(0,248,255,0.9);
+    }
+
+    /* HERO 오른쪽 카드: 미니 정보 패널 */
+    .hero-side {
+      padding: 16px 16px 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero-side-head {
+      font-size: 0.8rem;
+      color: #dbe6ff;
+      margin-bottom: 4px;
+    }
+
+    .hero-side-sub {
+      font-size: 0.78rem;
+      color: #a5b1ff;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 10px;
+      font-size: 0.8rem;
+    }
+
+    .hero-stat {
+      padding: 8px 8px;
+      border-radius: 16px;
+      background: rgba(2,10,30,0.78);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .hero-stat-label {
+      font-size: 0.7rem;
+      color: #9aa3ff;
+      margin-bottom: 3px;
+    }
+
+    .hero-stat-value {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-stat-value span {
+      font-size: 0.7rem;
+      opacity: 0.75;
+      margin-left: 3px;
+    }
+
+    /* ===== About / Emotion / 기타 카드 레이아웃 ===== */
+    .section-grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.4fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .about-text {
+      font-size: 0.9rem;
+      color: #d0daff;
+      line-height: 1.7;
+    }
+
+    .about-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.25);
+      font-size: 0.7rem;
+      color: #c6d3ff;
+      margin-bottom: 8px;
+    }
+
+    .about-pill small {
+      opacity: 0.9;
+    }
+
+    .tag-row {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(8,18,50,0.88);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #c9d6ff;
+    }
+
+    /* Emotion cards */
+    .emotion-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(120px,1fr));
+      gap: 10px;
+    }
+
+    .emotion-card {
+      position: relative;
+      padding: 10px 10px 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      overflow: hidden;
+      background: radial-gradient(circle at top,
+        rgba(255,255,255,0.12),
+        rgba(7,11,42,0.95)
+      );
+      box-shadow: 0 0 16px rgba(0,0,0,0.7);
+      font-size: 0.8rem;
+    }
+
+    .emotion-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      margin-bottom: 5px;
+      color: #f8fbff;
+    }
+
+    .emotion-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .emotion-desc {
+      font-size: 0.74rem;
+      color: #c7d2ff;
+      line-height: 1.4;
+    }
+
+    /* How to Mint steps */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(150px,1fr));
+      gap: 12px;
+    }
+
+    .step-card {
+      padding: 10px 12px 12px;
+      border-radius: 18px;
+      background: rgba(6,12,36,0.92);
+      border: 1px solid rgba(255,255,255,0.14);
+      font-size: 0.8rem;
+      box-shadow: 0 0 18px rgba(0,0,0,0.8);
+    }
+
+    .step-no {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      margin-bottom: 6px;
+      background: linear-gradient(120deg,#00f8ff,#ff80e3);
+      color: #050516;
+      font-weight: 700;
+    }
+
+    .step-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #e5ecff;
+    }
+
+    .step-desc {
+      font-size: 0.75rem;
+      color: #c0ccff;
+      line-height: 1.4;
+    }
+
+    /* NFT showcase (샘플 카드) */
+    .nft-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(130px,1fr));
+      gap: 10px;
+    }
+
+    .nft-card {
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(5,10,30,0.9);
+      border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: 0 0 18px rgba(0,0,0,0.8);
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nft-thumb {
+      position: relative;
+      padding-top: 70%;
+      background: radial-gradient(circle at top,
+        rgba(255,255,255,0.2),
+        rgba(0,0,0,1)
+      );
+      overflow: hidden;
+    }
+
+    .nft-thumb-inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 6px;
+      opacity: 0.9;
+    }
+
+    .nft-pill {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      background: rgba(0,0,0,0.7);
+      color: #f2f5ff;
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+
+    .nft-body {
+      padding: 8px 10px 10px;
+    }
+
+    .nft-title {
+      font-size: 0.8rem;
+      margin-bottom: 3px;
+      color: #e7efff;
+    }
+
+    .nft-meta {
+      font-size: 0.7rem;
+      color: #a7b3ff;
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* Roadmap */
+    .roadmap {
+      display: grid;
+      grid-template-columns: minmax(0,1fr);
+      gap: 10px;
+    }
+
+    .roadmap-row {
+      display: grid;
+      grid-template-columns: minmax(0,0.7fr) minmax(0,1.5fr);
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .roadmap-phase {
+      padding: 10px 12px;
+      border-radius: 18px;
+      background: rgba(6,10,36,0.94);
+      border: 1px solid rgba(255,255,255,0.16);
+      font-size: 0.8rem;
+    }
+
+    .roadmap-phase h4 {
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      color: #eef2ff;
+    }
+
+    .roadmap-phase p {
+      font-size: 0.75rem;
+      color: #c5cffc;
+      line-height: 1.5;
+    }
+
+    .roadmap-phase small {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.68rem;
+      color: #9aa4ff;
+      opacity: 0.9;
+    }
+
+    /* Community / Footer */
+    .community-card {
+      padding: 16px 16px 14px;
+      border-radius: 22px;
+      background: radial-gradient(circle at top,
+        rgba(0,248,255,0.14),
+        rgba(6,10,32,0.96)
+      );
+      border: 1px solid rgba(0,248,255,0.45);
+      box-shadow:
+        0 0 20px rgba(0,248,255,0.7),
+        0 0 34px rgba(120,70,255,0.65);
+      text-align: center;
+    }
+
+    .community-card h3 {
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    .community-card p {
+      font-size: 0.85rem;
+      color: #cbe5ff;
+      margin-bottom: 12px;
+    }
+
+    .btn-kakao {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: #fee500;
+      color: #2b1600;
+      font-size: 0.86rem;
+      font-weight: 700;
+      border: 0;
+      text-decoration: none;
+      box-shadow: 0 0 18px rgba(254,229,0,0.8);
+      transition: transform 0.16s ease-out;
+    }
+
+    .btn-kakao:hover {
+      transform: translateY(-1px) scale(1.01);
+    }
+
+    footer {
+      margin-top: 32px;
+      padding: 16px 0 10px;
+      font-size: 0.72rem;
+      color: #9099cc;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      text-align: center;
+      text-shadow: 0 0 12px rgba(0,0,0,0.8);
+    }
+
+    /* ===== 모바일 대응 ===== */
+    @media (max-width: 768px) {
+      .overlay {
+        padding: 0 12px 40px;
+      }
+
+      .nav-bar {
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      .nav-title-main {
+        font-size: 0.96rem;
+      }
+
+      .nav-links {
+        justify-content: flex-start;
+        gap: 6px;
+      }
+
+      .nav-links a {
+        font-size: 0.72rem;
+        padding: 5px 10px;
+      }
+
+      .hero {
+        min-height: auto;
+        padding-top: 20px;
+      }
+
+      .hero-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-main {
+        padding: 18px 16px 20px;
+      }
+
+      .hero-title {
+        font-size: 1.6rem;
+      }
+
+      .hero-side {
+        padding: 12px 12px 14px;
+      }
+
+      section {
+        padding: 40px 0;
+      }
+
+      .section-title {
+        font-size: 1.3rem;
+      }
+
+      .section-sub {
+        font-size: 0.88rem;
+      }
+
+      .section-grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .nft-thumb-inner {
+        font-size: 0.75rem;
+      }
+
+      .roadmap-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>MetaToRI Login</h1>
-    <input type="email" id="email" placeholder="이메일 입력">
-    <input type="password" id="password" placeholder="비밀번호 입력">
-    <button id="signup">회원가입</button>
-    <button id="login">로그인</button>
+  <!-- 우주 + 지구 + 별자리 배경 -->
+  <div class="bg-frame">
+    <iframe src="background.html"></iframe>
   </div>
 
-  <script type="module" src="./auth.js"></script>
+  <!-- 메인 오버레이 UI -->
+  <div class="overlay">
+    <header>
+      <nav class="nav-bar">
+        <div class="nav-left">
+          <div class="nav-logo">
+            <img src="https://raw.githubusercontent.com/pageno/mtw/main/mtwlogo.png" alt="MetaToRI Logo" />
+          </div>
+          <div class="nav-title">
+            <div class="nav-title-main">MetaToRI World</div>
+            <div class="nav-title-sub">Dream Never Fades</div>
+          </div>
+        </div>
+        <div class="nav-links">
+          <a href="#about">About</a>
+          <a href="#emotion">7 Emotions</a>
+          <a href="#mint">How to Mint</a>
+          <a href="#nft">NFT Gallery</a>
+          <a href="#roadmap">Roadmap</a>
+          <a href="#community">Community</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="inner">
+      <!-- HERO -->
+      <section id="hero" class="hero">
+        <div class="glass">
+          <div class="glass-inner hero-layout">
+            <div class="hero-main">
+              <div class="hero-badge">
+                <span class="dot"></span>
+                MetaToRI Emotional Sky · v1
+              </div>
+              <h1 class="hero-title">
+                당신의 <span class="highlight">꿈과 감정</span>이<br/>
+                하나의 별이 됩니다.
+              </h1>
+              <p class="hero-slogan">사라지는 꿈을, 사라지지 않는 하늘에.</p>
+              <p class="hero-desc">
+                MetaToRI World는 사람들의 꿈과 감정을 수집해<br/>
+                별과 별자리로 기록하는 감성 기반 NFT 프로젝트입니다.<br/>
+                당신의 이야기가 오늘, 이 하늘 위에 새겨집니다.
+              </p>
+              <div class="hero-actions">
+                <a
+                  href="https://open.kakao.com/o/giDA6Wee"
+                  target="_blank"
+                  class="btn-primary"
+                >
+                  🌙 꿈 참여 / 커뮤니티 입장
+                </a>
+                <a href="#about" class="btn-ghost">프로젝트 구조 보기</a>
+              </div>
+              <div class="hero-meta">
+                <span><span class="hero-meta-dot"></span> Polygon 기반 감성 NFT</span>
+                <span>사계절 별자리 · 7가지 감정</span>
+              </div>
+            </div>
+
+            <aside class="hero-side">
+              <div class="hero-side-head">LIVE DREAM SKY</div>
+              <div class="hero-side-sub">
+                현재 MetaToRI 하늘에<br/>
+                기록되고 있는 감정의 분포입니다. (예시 값)
+              </div>
+              <div class="hero-stats">
+                <div class="hero-stat">
+                  <div class="hero-stat-label">Total Dreams</div>
+                  <div class="hero-stat-value">000<span>/10k</span></div>
+                </div>
+                <div class="hero-stat">
+                  <div class="hero-stat-label">Active Emotions</div>
+                  <div class="hero-stat-value">7<span>types</span></div>
+                </div>
+                <div class="hero-stat">
+                  <div class="hero-stat-label">Seasons</div>
+                  <div class="hero-stat-value">4<span>constellations</span></div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABOUT -->
+      <section id="about">
+        <div class="section-label">PROJECT OVERVIEW</div>
+        <h2 class="section-title">MetaToRI World는 어떤 프로젝트인가요?</h2>
+        <p class="section-sub">
+          MetaToRI World는 “사라지는 꿈을 남기는 것”이라는 철학에서 시작되었습니다.
+          사람들의 꿈·감정·이야기를 NFT 별로 남기고, 이 별들이 사계절 별자리를 이뤄
+          하나의 하늘을 완성합니다.
+        </p>
+
+        <div class="section-grid-2">
+          <div class="glass">
+            <div class="glass-inner" style="padding:16px 16px 18px;">
+              <div class="about-pill">
+                🌌 <small>Dream Archive · NFT</small>
+              </div>
+              <div class="about-text">
+                <p>
+                  각 NFT는 한 사람의 <strong>꿈(Dream)</strong>이자,
+                  <strong>감정(Emotion)</strong>의 스냅샷입니다.
+                  우리는 이 경험들을 “별”로 시각화해 하늘에 떠 있게 만듭니다.
+                </p>
+                <p style="margin-top:10px;">
+                  <strong>별</strong>은 한 사람의 꿈, <strong>별자리</strong>는 비슷한 감정의 별들이 모여
+                  만들어지는 구조입니다. 봄·여름·가을·겨울 하늘마다 다른 의미가 부여됩니다.
+                </p>
+                <div class="tag-row">
+                  <span class="tag">감정 기반 NFT</span>
+                  <span class="tag">사계절 별자리</span>
+                  <span class="tag">꿈 보존 아카이브</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass">
+            <div class="glass-inner" style="padding:16px 16px 18px;">
+              <div class="about-pill">
+                🪐 <small>Seasonal Constellation</small>
+              </div>
+              <div class="about-text">
+                <p><strong>사계절 메타토리 하늘</strong></p>
+                <p style="margin-top:6px;">
+                  봄 — 새로운 시작과 희망의 별자리<br/>
+                  여름 — 열정과 도전의 별자리<br/>
+                  가을 — 회상과 추억의 별자리<br/>
+                  겨울 — 치유와 평온의 별자리
+                </p>
+                <p style="margin-top:8px;">
+                  같은 별이라도 어느 계절, 어떤 감정으로 기록되었는지에 따라
+                  완전히 다른 의미를 갖게 됩니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- EMOTIONS -->
+      <section id="emotion">
+        <div class="section-label">EMOTIONAL SYSTEM</div>
+        <h2 class="section-title">7가지 감정으로 이루어진 MetaToRI의 별</h2>
+        <p class="section-sub">
+          MetaToRI의 모든 별은 7가지 감정값으로 구성되며,
+          이 감정이 별의 색과 빛으로 표현됩니다.
+          AI가 꿈의 내용을 해석해 감정을 분류하고, 최종 결정은 Dreamer가 컨펌합니다.
+        </p>
+
+        <div class="glass" style="margin-bottom:16px;">
+          <div class="glass-inner" style="padding:14px 14px 16px;">
+            <div class="emotion-grid">
+              <div class="emotion-card" style="border-color:rgba(255,215,0,0.5);">
+                <div class="emotion-chip">
+                  <span class="emotion-dot" style="background:#ffd700;"></span>
+                  Joy · 기쁨
+                </div>
+                <div class="emotion-desc">
+                  황금빛. 생명력과 긍정을 상징하는 별빛.
+                </div>
+              </div>
+              <div class="emotion-card" style="border-color:rgba(60,141,255,0.5);">
+                <div class="emotion-chip">
+                  <span class="emotion-dot" style="background:#3c8dff;"></span>
+                  Sadness · 슬픔
+                </div>
+                <div class="emotion-desc">
+                  깊은 남색. 마음 속 울림과 여운이 남는 감정.
+                </div>
+              </div>
+              <div class="emotion-card" style="border-color:rgba(255,64,64,0.6);">
+                <div class="emotion-chip">
+                  <span class="emotion-dot" style="background:#ff4040;"></span>
+                  Anger · 분노
+                </div>
+                <div class="emotion-desc">
+                  붉은빛. 상처이자 동시에 변화하려는 의지.
+                </div>
+              </div>
+              <div class="emotion-card" style="border-color:rgba(165,255,158,0.6);">
+                <div class="emotion-chip">
+                  <span class="emotion-dot" style="background:#a5ff9e;"></span>
+                  Peace · 평온
+                </div>
+                <div class="emotion-desc">
+                  연녹색. 숨을 고르고, 다시 일어날 수 있는 상태.
+                </div>
+              </div>
+              <div class="emotion-card" style="border-color:rgba(255,139,216,0.6);">
+                <div class="emotion-chip">
+                  <span class="emotion-dot" style="background:#ff8bd8;"></span>
+                  Love · 사랑
+                </div>
+                <div class="emotion-desc">
+                  분홍빛. 연결, 관계, 누군가를 위한 마음.
+                </div>
+              </div>
+              <div class="emotion-card" style="border-color:rgba(178,139,255,0.6);">
+                <div class="emotion-chip">
+                  <span class="emotion-dot" style="background:#b28bff;"></span>
+                  Hope · 희망
+                </div>
+                <div class="emotion-desc">
+                  보라빛. 아직 오지 않은 미래에 대한 믿음.
+                </div>
+              </div>
+              <div class="emotion-card" style="border-color:rgba(127,234,255,0.6);">
+                <div class="emotion-chip">
+                  <span class="emotion-dot" style="background:#7feaff;"></span>
+                  Memory · 기억
+                </div>
+                <div class="emotion-desc">
+                  하늘빛. 잊히고 싶지 않은 순간을 담아둔 별.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOW TO MINT -->
+      <section id="mint">
+        <div class="section-label">HOW TO PARTICIPATE</div>
+        <h2 class="section-title">MetaToRI NFT는 이렇게 만들어집니다</h2>
+        <p class="section-sub">
+          MetaToRI의 1차 발행은 모두 “에어드랍 형식”으로 진행됩니다.
+          꿈을 보내주면, 해석과 감정 분석을 거쳐 하나의 별 NFT가 만들어지고,
+          Dreamer의 지갑으로 전달됩니다.
+        </p>
+
+        <div class="glass">
+          <div class="glass-inner" style="padding:16px 16px 16px;">
+            <div class="steps">
+              <div class="step-card">
+                <div class="step-no">1</div>
+                <div class="step-title">결제 & 참여 신청</div>
+                <div class="step-desc">
+                  원화 또는 폴리곤(MATIC)으로 참여비 결제 후,
+                  꿈 제출 폼 링크를 안내 받습니다.
+                </div>
+              </div>
+              <div class="step-card">
+                <div class="step-no">2</div>
+                <div class="step-title">꿈 제출 (Google Form)</div>
+                <div class="step-desc">
+                  닉네임, 감정 키워드, 꿈 내용을 50자 내외로 작성합니다.
+                  길게 적어도 괜찮지만 핵심이 중요합니다.
+                </div>
+              </div>
+              <div class="step-card">
+                <div class="step-no">3</div>
+                <div class="step-title">AI 해석 & 감정 컨펌</div>
+                <div class="step-desc">
+                  AI가 꿈을 요약하고 감정을 분석한 뒤,
+                  Dreamer에게 다시 확인을 받습니다.
+                </div>
+              </div>
+              <div class="step-card">
+                <div class="step-no">4</div>
+                <div class="step-title">NFT 발행 & 에어드랍</div>
+                <div class="step-desc">
+                  최종 확정 후 폴리곤 네트워크에서 NFT가 발행되며,
+                  Dreamer의 지갑 주소로 에어드랍됩니다.
+                </div>
+              </div>
+              <div class="step-card">
+                <div class="step-no">5</div>
+                <div class="step-title">하늘에서 별 확인</div>
+                <div class="step-desc">
+                  MetaToRI 하늘 뷰어에서 해당 좌표의 별이 활성화됩니다.
+                  별을 클릭하면 감정/꿈 요약이 함께 나타납니다.
+                </div>
+              </div>
+              <div class="step-card">
+                <div class="step-no">6</div>
+                <div class="step-title">2차 거래 (OpenSea)</div>
+                <div class="step-desc">
+                  NFT는 OpenSea 등에서 자유 거래가 가능하며,<br/>
+                  2차 거래 시 로열티가 프로젝트로 돌아옵니다.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NFT GALLERY SAMPLE -->
+      <section id="nft">
+        <div class="section-label">NFT GALLERY</div>
+        <h2 class="section-title">MetaToRI 별 NFT 미리보기 (샘플)</h2>
+        <p class="section-sub">
+          실제 서비스에서는 각 NFT가 별자리 데이터와 연결되어,
+          좌표·감정·계절 정보와 함께 표시됩니다.
+          지금은 레이아웃을 위한 샘플 카드입니다.
+        </p>
+
+        <div class="glass">
+          <div class="glass-inner" style="padding:14px 14px 16px;">
+            <div class="nft-grid">
+              <div class="nft-card">
+                <div class="nft-thumb">
+                  <div class="nft-pill">JOY · SPRING</div>
+                  <div class="nft-thumb-inner">
+                    🌟 새벽에 다시 시작을 결심한 꿈
+                  </div>
+                </div>
+                <div class="nft-body">
+                  <div class="nft-title">MetaToRI #0001</div>
+                  <div class="nft-meta">
+                    <span>감정: Joy</span>
+                    <span>시즌: Spring</span>
+                  </div>
+                </div>
+              </div>
+              <div class="nft-card">
+                <div class="nft-thumb">
+                  <div class="nft-pill">MEMORY · AUTUMN</div>
+                  <div class="nft-thumb-inner">
+                    🌌 오래된 친구와 다시 만난 꿈
+                  </div>
+                </div>
+                <div class="nft-body">
+                  <div class="nft-title">MetaToRI #0002</div>
+                  <div class="nft-meta">
+                    <span>감정: Memory</span>
+                    <span>시즌: Autumn</span>
+                  </div>
+                </div>
+              </div>
+              <div class="nft-card">
+                <div class="nft-thumb">
+                  <div class="nft-pill">ANGER · SUMMER</div>
+                  <div class="nft-thumb-inner">
+                    🔥 도망치지 않고 맞선 장면의 꿈
+                  </div>
+                </div>
+                <div class="nft-body">
+                  <div class="nft-title">MetaToRI #0003</div>
+                  <div class="nft-meta">
+                    <span>감정: Anger</span>
+                    <span>시즌: Summer</span>
+                  </div>
+                </div>
+              </div>
+              <div class="nft-card">
+                <div class="nft-thumb">
+                  <div class="nft-pill">PEACE · WINTER</div>
+                  <div class="nft-thumb-inner">
+                    ❄️ 눈 덮인 들판에 혼자 서 있는 꿈
+                  </div>
+                </div>
+                <div class="nft-body">
+                  <div class="nft-title">MetaToRI #0004</div>
+                  <div class="nft-meta">
+                    <span>감정: Peace</span>
+                    <span>시즌: Winter</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ROADMAP -->
+      <section id="roadmap">
+        <div class="section-label">ROADMAP</div>
+        <h2 class="section-title">MetaToRI World · 로드맵</h2>
+        <p class="section-sub">
+          MetaToRI의 첫 걸음은 “꿈을 모으는 것”입니다.
+          이후 브랜드화와 감정 아카이브, 그리고 재단 설립까지
+          긴 호흡으로 확장할 계획입니다.
+        </p>
+
+        <div class="glass">
+          <div class="glass-inner" style="padding:14px 14px 16px;">
+            <div class="roadmap">
+              <div class="roadmap-row">
+                <div class="roadmap-phase">
+                  <h4>Phase 1 — Dream Collection</h4>
+                  <small>현재 단계</small>
+                  <p>
+                    · NFT 기본 구조 설계<br/>
+                    · 카카오 채널 / 폼 구축<br/>
+                    · 1차 Dreamer 모집 및 테스트 발행
+                  </p>
+                </div>
+                <div class="roadmap-phase">
+                  <h4>Phase 2 — Brand & Sky</h4>
+                  <p>
+                    · 감정 기반 하늘 뷰어 고도화<br/>
+                    · 감정 통계 / 시즌별 데이터 공개<br/>
+                    · 굿즈, 포스터 등 브랜드 시각화
+                  </p>
+                </div>
+              </div>
+              <div class="roadmap-row">
+                <div class="roadmap-phase">
+                  <h4>Phase 3 — Exhibition & Archive</h4>
+                  <p>
+                    · 온라인/오프라인 전시 시도<br/>
+                    · Story 기반 큐레이션 페이지 제작<br/>
+                    · “감정 지도” 인포그래픽 공개
+                  </p>
+                </div>
+                <div class="roadmap-phase">
+                  <h4>Phase 4 — MetaToRI Foundation</h4>
+                  <p>
+                    · 꿈·감정 데이터 아카이브화<br/>
+                    · 아티스트/연구자와 협업 구조 설계<br/>
+                    · 재단 설립을 통한 장기 운영 기반 마련
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COMMUNITY / FOOTER -->
+      <section id="community">
+        <div class="section-label">COMMUNITY</div>
+        <h2 class="section-title">당신의 꿈, 지금부터 기록해 볼까요?</h2>
+        <p class="section-sub">
+          MetaToRI World는 거창한 투기 프로젝트가 아니라,  
+          “내가 꿨던 꿈, 내가 느꼈던 감정”을 차분하게 남기는 작은 기록에서 시작합니다.
+        </p>
+
+        <div class="community-card">
+          <h3>카카오 오픈채팅에서 먼저 함께해요.</h3>
+          <p>
+            진행 공지, 꿈 제출 링크, 일정 안내 등은<br/>
+            모두 카카오 채널을 중심으로 운영됩니다.
+          </p>
+          <a
+            href="https://open.kakao.com/o/giDA6Wee"
+            target="_blank"
+            class="btn-kakao"
+          >
+            💬 MetaToRI 카카오 오픈채팅 입장
+          </a>
+        </div>
+
+        <footer>
+          © 2025 MetaToRI World · Dream Never Fades<br/>
+          All dreams and emotions are archived as unique stars.
+        </footer>
+      </section>
+      <!-- 🎧 MetaToRI World 배경음 -->
+      <audio id="bgm" src="https://github.com/pageno/mtw/raw/main/MetaToriWorld.mp3" autoplay loop preload="auto"></audio>
+
+      <!-- 음소거/재생 토글 버튼 -->
+      <button id="audioToggle" title="Toggle Sound">🔊</button>
+
+      <script>
+        const bgm = document.getElementById("bgm");
+        const audioToggle = document.getElementById("audioToggle");
+
+        // 시작 시 기본 볼륨 낮게
+        bgm.volume = 0.0;
+
+        // 페이드 인
+        function fadeInAudio() {
+          let vol = 0.0;
+          const fade = setInterval(() => {
+            if (vol < 0.4) {
+              vol += 0.01;
+              bgm.volume = vol;
+            } else {
+              clearInterval(fade);
+            }
+          }, 200);
+        }
+
+        // 페이드 아웃
+        function fadeOutAudio() {
+          let vol = bgm.volume;
+          const fade = setInterval(() => {
+            if (vol > 0.01) {
+              vol -= 0.02;
+              bgm.volume = Math.max(0, vol);
+            } else {
+              clearInterval(fade);
+              bgm.pause();
+            }
+          }, 150);
+        }
+
+        // 자동재생 차단 시 클릭으로 시작
+        document.body.addEventListener("click", () => {
+          if (bgm.paused) {
+            bgm.play().then(() => fadeInAudio());
+          }
+        });
+
+        // 초기 재생 후 서서히 볼륨 올림
+        bgm.addEventListener("canplay", fadeInAudio);
+
+        // 버튼 토글 기능
+        audioToggle.addEventListener("click", () => {
+          if (bgm.paused || bgm.muted) {
+            bgm.muted = false;
+            bgm.play();
+            fadeInAudio();
+            audioToggle.textContent = "🔊";
+          } else {
+            fadeOutAudio();
+            audioToggle.textContent = "🔈";
+          }
+        });
+
+        // 페이지를 벗어날 때 자동 페이드아웃
+        window.addEventListener("beforeunload", fadeOutAudio);
+      </script>
+
+      <style>
+        #audioToggle {
+          position: fixed;
+          bottom: 18px;
+          right: 20px;
+          z-index: 100;
+          width: 46px;
+          height: 46px;
+          border: none;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.08);
+          backdrop-filter: blur(12px);
+          color: #00f8ff;
+          font-size: 1.4rem;
+          box-shadow: 0 0 15px rgba(0,248,255,0.4);
+          cursor: pointer;
+          transition: all 0.25s ease;
+        }
+        #audioToggle:hover {
+          box-shadow: 0 0 25px rgba(255,128,227,0.5);
+          transform: scale(1.08);
+        }
+      </style>
+    </main>
+  </div>
 </body>
 </html>
